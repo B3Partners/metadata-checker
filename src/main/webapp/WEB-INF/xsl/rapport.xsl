@@ -40,48 +40,40 @@
 				</table>
 				<p></p>
 				<table border="1" style="border-collapse: collapse">
+					<thead>
+						<tr>
+							<th>Record</th>
+							<th>ID</th>
+							<th>Titel</th>
+							<th>Schematron</th>
+							<th>location</th>
+							<th>test</th>
+							<th>text</th>
+						</tr>
+					</thead>
 					<tbody>
-						<tr>
-							<th rowspan="2">Record</th>
-							<th colspan="count($schematrons)">Checks</th>
-						</tr>
-						<tr>
-							<xsl:for-each select="$schematrons">
-								<xsl:variable name="e" select="tokenize(.,'/')"/>
-								<th><xsl:value-of select="$e[position()= count($e)]"/></th>
-							</xsl:for-each>
-						</tr>
 						<xsl:for-each select="$root/output">
 							<xsl:variable name="output" select="."/>
-							<tr>
-								<td align="right"><xsl:value-of select="@record"/></td>
-								<xsl:for-each select="$schematrons">
-									<xsl:variable name="schematron" select="."/>
-									<xsl:variable name="failed" select="count($output/svrl:schematron-output[@schematron=$schematron]/svrl:failed-assert)"/>
-									<xsl:variable name="succeeded" select="count($output/svrl:schematron-output[@schematron=$schematron]/successful-report)"/>
-									<td align="center">
-										<xsl:choose>
-											<xsl:when test="$failed > 0">
-												<xsl:value-of select="$failed"/> fout<xsl:if test="$failed > 1">en</xsl:if>
-											</xsl:when>
-											<xsl:otherwise>
-												OK
-											</xsl:otherwise>
-										</xsl:choose>
-									</td>
+							<xsl:for-each select="$schematrons">
+								<xsl:variable name="schematron" select="."/>
+								<xsl:variable name="e" select="tokenize(.,'/')"/>
+								<xsl:variable name="schematron-short" select="$e[position()= count($e)]"/>
+								<xsl:for-each select="$output/svrl:schematron-output[@schematron=$schematron]/svrl:failed-assert">
+									<tr>
+										<td><xsl:value-of select="$output/@record"/></td>
+										<td><xsl:value-of select="'-'"/></td>
+										<td><xsl:value-of select="'-'"/></td>
+										<td><xsl:value-of select="$schematron-short"/></td>
+										<td><xsl:value-of select="@location"/></td>
+										<td><xsl:value-of select="@test"/></td>
+										<td><xsl:value-of select="svrl:text"/></td>
+									</tr>
 								</xsl:for-each>
-							</tr>
+							</xsl:for-each>
 						</xsl:for-each>
 					</tbody>
 				</table>
-				<xsl:variable  name="parsed">
-					<xsl:apply-templates/>
-				</xsl:variable>
 			</body>
 		</html>
-	</xsl:template>
-	
-	<xsl:template match="output">
-	
 	</xsl:template>
 </xsl:stylesheet>
