@@ -22,6 +22,8 @@ import nl.b3p.schematron.SchematronProcessor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -37,6 +39,8 @@ import org.w3c.dom.NodeList;
 @StrictBinding
 @UrlBinding("/action/check")
 public class CheckActionBean implements ActionBean {
+    private static final Log log = LogFactory.getLog(CheckActionBean.class);
+    
     private static final String NAMESPACE_CSW = "http://www.opengis.net/cat/csw/2.0.2";
     
     private static final String DEFAULT_SCH_OPTGROUP = "Validaties NL metadata profiel";
@@ -170,8 +174,12 @@ public class CheckActionBean implements ActionBean {
         
         String additionalDirs = getContext().getServletContext().getInitParameter("schematronDirs");
         if(additionalDirs != null) {
-            for(String dir: additionalDirs.split(";")) {
-                schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+            try {
+                for(String dir: additionalDirs.split(";")) {
+                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                }
+            } catch(Exception e) {
+                log.error("Exception loading Schematrons from directories " + additionalDirs, e);
             }
         }
     }
