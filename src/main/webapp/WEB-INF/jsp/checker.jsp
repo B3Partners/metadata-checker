@@ -24,14 +24,15 @@
                     URL: <stripes:text name="documentLocation" size="100"/><p>
                         of<p>
                         CSW query: <stripes:text name="cswQuery" size="100"/><br>
-                        CSW maxRecords: <stripes:text name="cswMaxRecords" size="10"/><p>
+                        CSW maxRecords per request: <stripes:text name="cswMaxRecords" size="10"/><br>
+                        CSW totaal max: <stripes:text name="cswMaxRecordsTotal" size="10"/><p>
                         of<p>
                     Bestand: <stripes:file name="document"/>
                 </fieldset>
                 
                 <fieldset>
                     <legend>Schematrons</legend>
-                    
+                    Selecteer meerdere schematrons door de Control knop in te houden bij het aanklikken:<br>
                     <stripes:select name="selectedSchematrons" multiple="true" size="6">
                         <c:forEach var="schGroup" items="${actionBean.schematrons}">
                             <optgroup label="<c:out value="${schGroup.left}"/>">
@@ -49,7 +50,10 @@
                         <stripes:option value="inline">Inline</stripes:option>
                         <stripes:option value="download">Download</stripes:option>
                     </stripes:select>
-                        XSL stylesheet:<p>
+                        <p>
+                            <label><stripes:radio name="outputType" value="schematron"/>Schematron XML uitvoer</label><br>
+                            <label><stripes:radio name="outputType" value="report"/>Rapport, selecteer XSL stylesheet:</label><br>
+                        <p>   XSL stylesheet:<br>
                     <stripes:select name="selectedStylesheet" size="4">
                         <c:forEach var="xslGroup" items="${actionBean.stylesheets}">
                             <optgroup label="<c:out value="${xslGroup.left}"/>">

@@ -1,7 +1,9 @@
 package nl.b3p.metadatachecker.stripes;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -9,9 +11,13 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.controller.LifecycleStage;
@@ -45,6 +51,8 @@ public class CheckActionBean implements ActionBean {
     
     private static final String DEFAULT_SCH_OPTGROUP = "Validaties NL metadata profiel";
     private static final String DEFAULT_SCH_DIR = "/WEB-INF/sch";
+    private static final String DEFAULT_XSL_OPTGROUP = "Standaardrapportages";
+    private static final String DEFAULT_XSL_DIR = "/WEB-INF/xsl";
     
     private ActionBeanContext context;
     
@@ -73,7 +81,13 @@ public class CheckActionBean implements ActionBean {
     private String disposition = "inline";
     
     @Validate
-    private List<String> selectedSchematrons = new ArrayList();
+    private String outputType = "report";
+    
+    @Validate
+    private List<String> selectedSchematrons = new ArrayList(Arrays.asList(new String[] {DEFAULT_SCH_OPTGROUP + "/schematron-rules-nl-v13.sch"}));
+    
+    @Validate
+    private String selectedStylesheet = DEFAULT_XSL_OPTGROUP + "/rapport.xsl";
 
     //<editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
@@ -84,6 +98,14 @@ public class CheckActionBean implements ActionBean {
     @Override
     public void setContext(ActionBeanContext context) {
         this.context = context;
+    }
+
+    public String getOutputType() {
+        return outputType;
+    }
+
+    public void setOutputType(String outputType) {
+        this.outputType = outputType;
     }
     
     public String getDocumentLocation() {
@@ -141,6 +163,14 @@ public class CheckActionBean implements ActionBean {
     public void setSelectedSchematrons(List<String> selectedSchematrons) {
         this.selectedSchematrons = selectedSchematrons;
     }
+
+    public String getSelectedStylesheet() {
+        return selectedStylesheet;
+    }
+
+    public void setSelectedStylesheet(String selectedStylesheet) {
+        this.selectedStylesheet = selectedStylesheet;
+    }
     
     public String getCswQuery() {
         return cswQuery;
@@ -184,6 +214,23 @@ public class CheckActionBean implements ActionBean {
         }
     }
     
+    @Before(stages=LifecycleStage.BindingAndValidation)
+    public void loadStylesheets() {
+        File f = new File(getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR));
+        stylesheets.add(Pair.of(DEFAULT_XSL_OPTGROUP, Arrays.asList(f.list())));
+        
+        String additionalDirs = getContext().getServletContext().getInitParameter("stylesheetDirs");
+        if(additionalDirs != null) {
+            try {
+                for(String dir: additionalDirs.split(";")) {
+                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                }
+            } catch(Exception e) {
+                log.error("Exception loading stylesheets from directories " + additionalDirs, e);
+            }
+        }
+    }
+    
     @ValidationMethod(on = "check")
     public void checkInput() {
         if(documentLocation == null && cswQuery == null && document == null) {
@@ -223,31 +270,6 @@ public class CheckActionBean implements ActionBean {
         }
     }
     
-    private void applySchematrons(Document doc, DocumentBuilder db, Element output, Node document) throws Exception {
-        for(String sch: selectedSchematrons) {
-            String orgSch = sch;
-            if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
-                sch = getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
-            }
-
-            Source source = new DOMSource(document);
-
-            DOMResult r = new DOMResult();
-            SchematronProcessor.schematron(source, sch, r);
-
-            // Workaround using XML serialization to bytes is required to avoid
-            // org.w3c.dom.DOMException: NOT_SUPPORTED_ERR: The implementation does not support the requested type of object or operation. 
-	        // at org.apache.xerces.dom.CoreDocumentImpl.adoptNode
-            byte[] xml = SchematronProcessor.xmlToBytes(r.getNode());
-            Document rDom = db.parse(new ByteArrayInputStream(xml));
-            
-            Element schematronOutput = (Element)doc.adoptNode(rDom.getDocumentElement());
-            schematronOutput.setAttribute("schematron", orgSch);
-            output.appendChild(schematronOutput);
-        }
-    }
-        
-    
     private void handleCswQuery(Document doc, DocumentBuilder db, Element output) throws Exception {
         
         String cswPath = cswQuery.substring(0, cswQuery.indexOf("?")+1);
@@ -265,6 +287,7 @@ public class CheckActionBean implements ActionBean {
         
         int startPosition = 1;
         int record = 1;
+        int total = 0;
         do {
             List<NameValuePair> pageParams = new ArrayList(params);
             pageParams.add(new BasicNameValuePair("maxRecords", cswMaxRecords + ""));
@@ -273,7 +296,6 @@ public class CheckActionBean implements ActionBean {
             URL u = new URL(cswPath + URLEncodedUtils.format(pageParams, "UTF-8"));
             
             System.out.println("CSW query: " + u);
-            long time = System.currentTimeMillis();
             
             byte[] cswResponseBytes = IOUtils.toByteArray(u.openStream());
             Document cswResponse = db.parse(new ByteArrayInputStream(cswResponseBytes));
@@ -289,11 +311,11 @@ public class CheckActionBean implements ActionBean {
             }
             
             System.out.println("resultaten: " + numResults);
-            
+            total += numResults;
             for(int i = 0; i < numResults; i++) {
                 Node searchResultDocument = searchResults.getChildNodes().item(i);
                 
-                System.out.println("Document: " + SchematronProcessor.xmlToString(searchResultDocument));
+                //System.out.println("Document: " + SchematronProcessor.xmlToString(searchResultDocument));
                 byte[] documentBytes = SchematronProcessor.xmlToBytes(searchResultDocument);
                 
                 Element e = doc.createElement("output");
@@ -301,7 +323,7 @@ public class CheckActionBean implements ActionBean {
                 output.appendChild(e);
                 applySchematrons(doc, db, e, documentBytes);                
             }            
-        } while(false);
+        } while(cswMaxRecordsTotal == null || total < cswMaxRecordsTotal);
     }
     
     public Resolution check() throws Exception {
@@ -339,12 +361,34 @@ public class CheckActionBean implements ActionBean {
                 document.delete();
             }
         }
-
-        if("inline".equals(disposition)) {
-            results += StringEscapeUtils.escapeHtml4(SchematronProcessor.xmlToString(root));
-            return new ForwardResolution("/WEB-INF/jsp/checker.jsp");
+        
+        if("schematron".equals(outputType) || selectedStylesheet == null) {
+            if("inline".equals(disposition)) {
+                results += StringEscapeUtils.escapeHtml4(SchematronProcessor.xmlToString(root));
+                return new ForwardResolution("/WEB-INF/jsp/checker.jsp");
+            } else {
+                return new StreamingResolution("text/xml", new ByteArrayInputStream(SchematronProcessor.xmlToBytes(root)));
+            }
         } else {
-            return new StreamingResolution("text/xml", new ByteArrayInputStream(SchematronProcessor.xmlToBytes(root)));
+            if(selectedStylesheet.startsWith(DEFAULT_XSL_OPTGROUP)) {
+                selectedStylesheet = getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR + selectedStylesheet.substring(DEFAULT_XSL_OPTGROUP.length()));
+            }
+            
+            TransformerFactory f = TransformerFactory.newInstance();
+            Transformer t = f.newTransformer(new StreamSource(selectedStylesheet));
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            
+            if("inline".equals(disposition)) {
+                StringWriter sw = new StringWriter();
+                t.transform(new DOMSource(root), new StreamResult(sw));            
+                results += sw.toString();
+                return new ForwardResolution("/WEB-INF/jsp/checker.jsp");
+            } else {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                t.transform(new DOMSource(root), new StreamResult(bos));
+                return new StreamingResolution("text/html", new ByteArrayInputStream(bos.toByteArray()));
+            }
         }
     }
     
