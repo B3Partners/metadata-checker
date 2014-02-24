@@ -38,7 +38,7 @@
 						
 					</tbody>
 				</table>
-				<p></p>
+				<p>Gefaalde tests:</p>
 				<table border="1" style="border-collapse: collapse">
 					<thead>
 						<tr>
@@ -61,12 +61,12 @@
 								<xsl:for-each select="$output/svrl:schematron-output[@schematron=$schematron]/svrl:failed-assert">
 									<tr>
 										<td><xsl:value-of select="$output/@record"/></td>
-										<td><xsl:value-of select="'-'"/></td>
-										<td><xsl:value-of select="'-'"/></td>
-										<td><xsl:value-of select="$schematron-short"/></td>
-										<td><xsl:value-of select="@location"/></td>
-										<td><xsl:value-of select="@test"/></td>
-										<td><xsl:value-of select="svrl:text"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="$output/@id"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="$output/@title"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="$schematron-short"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="svrl:text"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="@test"/></td>
+										<td style="white-space: nowrap"><xsl:value-of select="@location"/></td>
 									</tr>
 								</xsl:for-each>
 							</xsl:for-each>

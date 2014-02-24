@@ -19,6 +19,10 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.controller.LifecycleStage;
 import net.sourceforge.stripes.validation.SimpleError;
@@ -26,6 +30,7 @@ import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationMethod;
 import nl.b3p.schematron.SchematronProcessor;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
@@ -206,7 +211,7 @@ public class CheckActionBean implements ActionBean {
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list(new SuffixFileFilter("*.sch")))));
                 }
             } catch(Exception e) {
                 log.error("Exception loading Schematrons from directories " + additionalDirs, e);
@@ -223,7 +228,7 @@ public class CheckActionBean implements ActionBean {
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list(new SuffixFileFilter("*.xsl")))));
                 }
             } catch(Exception e) {
                 log.error("Exception loading stylesheets from directories " + additionalDirs, e);
@@ -285,6 +290,11 @@ public class CheckActionBean implements ActionBean {
             }
         }
         
+        XPathFactory xpf = XPathFactory.newInstance();
+        XPath xpath = xpf.newXPath();
+        XPathExpression xpID = xpath.compile("*[local-name()='fileIdentifier']/*[local-name()='CharacterString']");
+        XPathExpression xpTitle = xpath.compile("*[local-name()='identificationInfo']/*[local-name()='MD_DataIdentification']/*[local-name()='citation']/*[local-name()='CI_Citation']/*[local-name()='title']/*[local-name()='CharacterString']");
+        
         int startPosition = 1;
         int record = 1;
         int total = 0;
@@ -314,12 +324,17 @@ public class CheckActionBean implements ActionBean {
             total += numResults;
             for(int i = 0; i < numResults; i++) {
                 Node searchResultDocument = searchResults.getChildNodes().item(i);
+
+                String id = (String)xpID.evaluate(searchResultDocument, XPathConstants.STRING);
+                String title = (String)xpTitle.evaluate(searchResultDocument, XPathConstants.STRING);
                 
                 //System.out.println("Document: " + SchematronProcessor.xmlToString(searchResultDocument));
                 byte[] documentBytes = SchematronProcessor.xmlToBytes(searchResultDocument);
                 
                 Element e = doc.createElement("output");
-                e.setAttribute("record", record++ + "");                        
+                e.setAttribute("record", record++ + ""); 
+                e.setAttribute("id", id);
+                e.setAttribute("title", title);
                 output.appendChild(e);
                 applySchematrons(doc, db, e, documentBytes);                
             }            
