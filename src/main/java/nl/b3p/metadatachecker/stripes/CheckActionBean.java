@@ -30,7 +30,6 @@ import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationMethod;
 import nl.b3p.schematron.SchematronProcessor;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
@@ -89,6 +88,9 @@ public class CheckActionBean implements ActionBean {
     private String outputType = "report";
     
     @Validate
+    private String reportParams;
+    
+    @Validate
     private List<String> selectedSchematrons = new ArrayList(Arrays.asList(new String[] {DEFAULT_SCH_OPTGROUP + "/schematron-rules-nl-v13.sch"}));
     
     @Validate
@@ -105,6 +107,14 @@ public class CheckActionBean implements ActionBean {
         this.context = context;
     }
 
+    public String getReportParams() {
+        return reportParams;
+    }
+
+    public void setReportParams(String reportParams) {
+        this.reportParams = reportParams;
+    }
+    
     public String getOutputType() {
         return outputType;
     }
@@ -211,7 +221,7 @@ public class CheckActionBean implements ActionBean {
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list(new SuffixFileFilter("*.sch")))));
+                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
                 }
             } catch(Exception e) {
                 log.error("Exception loading Schematrons from directories " + additionalDirs, e);
@@ -221,6 +231,9 @@ public class CheckActionBean implements ActionBean {
     
     @Before(stages=LifecycleStage.BindingAndValidation)
     public void loadStylesheets() {
+        reportParams = getContext().getServletContext().getInitParameter("defaultStylesheetParams");
+        
+        
         File f = new File(getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR));
         stylesheets.add(Pair.of(DEFAULT_XSL_OPTGROUP, Arrays.asList(f.list())));
         
@@ -228,7 +241,7 @@ public class CheckActionBean implements ActionBean {
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list(new SuffixFileFilter("*.xsl")))));
+                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
                 }
             } catch(Exception e) {
                 log.error("Exception loading stylesheets from directories " + additionalDirs, e);
@@ -392,7 +405,16 @@ public class CheckActionBean implements ActionBean {
             TransformerFactory f = TransformerFactory.newInstance();
             Transformer t = f.newTransformer(new StreamSource(selectedStylesheet));
             t.setOutputProperty(OutputKeys.INDENT, "yes");
-
+            
+            if(reportParams != null) {
+                String[] params = reportParams.trim().split("\n");
+                for(String p: params) {
+                    int i = p.indexOf("=");
+                    if(i != -1) {
+                        t.setParameter(p.substring(0,i), p.substring(i+1));
+                    }
+                }
+            }
             
             if("inline".equals(disposition)) {
                 StringWriter sw = new StringWriter();

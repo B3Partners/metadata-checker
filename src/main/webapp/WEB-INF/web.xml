@@ -11,6 +11,10 @@
         <param-name>stylesheetDirs</param-name>
         <param-value>/opt/b3p/metadata-checker/xsl</param-value>
     </context-param>    
+    <context-param>
+        <param-name>defaultStylesheetParams</param-name>
+        <param-value>document-link=http://some-csw/something?id=</param-value>
+    </context-param>
     <!-- Localization context voor o.a. de <fmt:message> JSTL tag -->
     <context-param>
         <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>

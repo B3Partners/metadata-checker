@@ -63,6 +63,8 @@
                             </optgroup>
                         </c:forEach>
                     </stripes:select>
+                            <p>XSL stylesheet parameters (&eacute;&eacute;n parameter per regel, naam=waarde)</p>
+                            <stripes:textarea name="reportParams" rows="2" cols="100"/>
                 </fieldset>
                 <p/>
                 <stripes:submit name="check" value="Check"/>
