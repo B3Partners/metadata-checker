@@ -16,8 +16,6 @@ import static nl.b3p.metadatachecker.stripes.CheckActionBean.DEFAULT_SCH_DIR;
 import static nl.b3p.metadatachecker.stripes.CheckActionBean.DEFAULT_SCH_OPTGROUP;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  *
