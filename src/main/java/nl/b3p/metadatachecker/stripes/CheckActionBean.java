@@ -28,6 +28,7 @@ import net.sourceforge.stripes.controller.LifecycleStage;
 import net.sourceforge.stripes.validation.SimpleError;
 import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationMethod;
+import nl.b3p.schematron.SchematronPatternTitleExtractor;
 import nl.b3p.schematron.SchematronProcessor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -227,6 +228,13 @@ public class CheckActionBean implements ActionBean {
             }
         }
     }    
+    
+    public String schTitle(String sch) {
+        if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
+            sch = getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
+        }        
+        return SchematronPatternTitleExtractor.getSchPatternTitle(sch);
+    }
     
     @Before(stages=LifecycleStage.BindingAndValidation)
     public void loadSch() {
