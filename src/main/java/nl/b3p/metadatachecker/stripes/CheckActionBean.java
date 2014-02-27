@@ -53,10 +53,10 @@ public class CheckActionBean implements ActionBean {
     
     private static final String NAMESPACE_CSW = "http://www.opengis.net/cat/csw/2.0.2";
     
-    private static final String DEFAULT_SCH_OPTGROUP = "Validaties NL metadata profiel";
-    private static final String DEFAULT_SCH_DIR = "/WEB-INF/sch";
-    private static final String DEFAULT_XSL_OPTGROUP = "Standaardrapportages";
-    private static final String DEFAULT_XSL_DIR = "/WEB-INF/xsl";
+    public static final String DEFAULT_SCH_OPTGROUP = "Validaties NL metadata profiel";
+    public static final String DEFAULT_SCH_DIR = "/WEB-INF/sch";
+    public static final String DEFAULT_XSL_OPTGROUP = "Standaardrapportages";
+    public static final String DEFAULT_XSL_DIR = "/WEB-INF/xsl";
     
     private ActionBeanContext context;
     
@@ -212,12 +212,11 @@ public class CheckActionBean implements ActionBean {
     }
     //</editor-fold>
     
-    @Before(stages=LifecycleStage.BindingAndValidation)
-    public void loadSch() {
-        File f = new File(getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR));
+    public static void loadSch(ActionBeanContext context, List<Pair<String,List<String>>> schematrons) {
+        File f = new File(context.getServletContext().getRealPath(DEFAULT_SCH_DIR));
         schematrons.add(Pair.of(DEFAULT_SCH_OPTGROUP, Arrays.asList(f.list())));
         
-        String additionalDirs = getContext().getServletContext().getInitParameter("schematronDirs");
+        String additionalDirs = context.getServletContext().getInitParameter("schematronDirs");
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
@@ -227,6 +226,11 @@ public class CheckActionBean implements ActionBean {
                 log.error("Exception loading Schematrons from directories " + additionalDirs, e);
             }
         }
+    }    
+    
+    @Before(stages=LifecycleStage.BindingAndValidation)
+    public void loadSch() {
+        loadSch(getContext(), schematrons);
     }
     
     @Before(stages=LifecycleStage.BindingAndValidation)

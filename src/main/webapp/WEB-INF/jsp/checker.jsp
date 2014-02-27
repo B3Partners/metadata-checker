@@ -13,8 +13,9 @@
         <h1>Metadata checker</h1>
         
         <p>Deze tool kan op een metadata XML document aantal Schematron regels toepassen
-            en de resultaten rapporteren.</p>
-        
+            en de resultaten rapporteren.
+        <p>Op <stripes:link beanclass="nl.b3p.metadatachecker.stripes.SchEditActionBean">deze pagina</stripes:link> kunnen de Schematrons worden beheerd. </p>
+        <p>
             <stripes:form beanclass="nl.b3p.metadatachecker.stripes.CheckActionBean">
                 <stripes:errors/>
                 <stripes:messages/>
