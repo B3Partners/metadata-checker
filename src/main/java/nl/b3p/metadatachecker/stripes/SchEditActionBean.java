@@ -102,6 +102,7 @@ public class SchEditActionBean implements ActionBean {
 
     @Before(stages=LifecycleStage.BindingAndValidation)
     public void loadDirectories() {
+        directories.clear();
         directories.add(CheckActionBean.DEFAULT_SCH_OPTGROUP);
         
         String additionalDirs = context.getServletContext().getInitParameter("schematronDirs");

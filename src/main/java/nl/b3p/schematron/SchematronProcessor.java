@@ -2,6 +2,7 @@
 package nl.b3p.schematron;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -20,6 +21,7 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
@@ -35,7 +37,12 @@ public class SchematronProcessor {
     private static TransformerFactory transformerFactory;
     private static Templates includeTemplates, abstractExpandTemplates, svrlTemplates;
     
-    private static final Map<String,Templates> schTemplatesCache = new HashMap();
+    /**
+     * Cache of XSL stylesheets created from Schematrons. Map of Schematron 
+     * file path to a pair of the last modified date of the file and the Templates
+     * object.
+     */
+    private static final Map<String,Pair<Long,Templates>> schTemplatesCache = new HashMap();
 
     public static void schematron(Source document, String sch, Result messages) throws Exception {
         synchronized(monitor) {
@@ -71,9 +78,12 @@ public class SchematronProcessor {
         
         Templates schTemplates;
         synchronized(schTemplatesCache) {
-            schTemplates = schTemplatesCache.get(sch);
+            Pair<Long,Templates> schCached = schTemplatesCache.get(sch);
+            File schFile = new File(sch);
             
-            if(schTemplates == null) {
+            if(schCached != null && schFile.lastModified() == schCached.getLeft().longValue()) {
+                schTemplates = schCached.getRight();
+            } else {
                 
                 DOMResult included = new DOMResult();
                 Transformer t = includeTemplates.newTransformer();
@@ -88,9 +98,8 @@ public class SchematronProcessor {
                 t.transform(new DOMSource(abstractExpanded.getNode()), schXsl);
                 
                 schTemplates = transformerFactory.newTemplates(new DOMSource(schXsl.getNode()));
-                schTemplatesCache.put(sch, schTemplates);
+                schTemplatesCache.put(sch, Pair.of(schFile.lastModified(), schTemplates));
             }
-            
         }
         
         Transformer t = schTemplates.newTransformer();

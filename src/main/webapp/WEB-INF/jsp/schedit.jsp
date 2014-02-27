@@ -52,7 +52,7 @@
         <stripes:form beanclass="nl.b3p.metadatachecker.stripes.SchEditActionBean" name="f">
             <stripes:hidden name="schematron"/>
             <fieldset>
-                <legend>Nieuwe schematron toevoegen</legend>
+                <legend>Schematron toevoegen / updaten</legend>
                 Directory: 
                 <stripes:select name="directory">
                     <stripes:option/>
