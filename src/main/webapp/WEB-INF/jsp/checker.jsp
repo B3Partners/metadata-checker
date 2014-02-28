@@ -35,7 +35,14 @@
                 <fieldset>
                     <legend>Schematrons</legend>
                     Selecteer meerdere schematrons door de Control knop in te houden bij het aanklikken:<br>
-                    <stripes:select name="selectedSchematrons" multiple="true" size="6">
+                    <c:set var="size" value="${0}"/>
+                    <c:forEach var="schGroup" items="${actionBean.schematrons}">
+                        <c:set var="size" value="${size+1}"/>
+                        <c:forEach var="sch" items="${schGroup.right}">
+                            <c:set var="size" value="${size+1}"/>
+                        </c:forEach>
+                    </c:forEach>
+                    <stripes:select name="selectedSchematrons" multiple="true" size="${size}">
                         <c:forEach var="schGroup" items="${actionBean.schematrons}">
                             <optgroup label="<c:out value="${schGroup.left}"/>">
                                 <c:forEach var="sch" items="${schGroup.right}">
@@ -58,7 +65,14 @@
                             <label><stripes:radio name="outputType" value="schematron"/>Schematron XML uitvoer</label><br>
                             <label><stripes:radio name="outputType" value="report"/>Rapport, selecteer XSL stylesheet:</label><br>
                         <p>   XSL stylesheet:<br>
-                    <stripes:select name="selectedStylesheet" size="4">
+                    <c:set var="size" value="${0}"/>
+                    <c:forEach var="xslGroup" items="${actionBean.stylesheets}">
+                        <c:set var="size" value="${size+1}"/>
+                        <c:forEach var="xsl" items="${xslGroup.right}">
+                            <c:set var="size" value="${size+1}"/>
+                        </c:forEach>
+                    </c:forEach>
+                    <stripes:select name="selectedStylesheet" size="${size}">
                         <c:forEach var="xslGroup" items="${actionBean.stylesheets}">
                             <optgroup label="<c:out value="${xslGroup.left}"/>">
                                 <c:forEach var="xsl" items="${xslGroup.right}">
