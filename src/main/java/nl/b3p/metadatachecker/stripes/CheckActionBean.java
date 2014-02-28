@@ -317,7 +317,8 @@ public class CheckActionBean implements ActionBean {
         
         XPathFactory xpf = XPathFactory.newInstance();
         XPath xpath = xpf.newXPath();
-        XPathExpression xpID = xpath.compile("*[local-name()='fileIdentifier']/*[local-name()='CharacterString']");
+        XPathExpression xpFileID = xpath.compile("*[local-name()='fileIdentifier']/*[local-name()='CharacterString']");
+        XPathExpression xpID = xpath.compile("*[local-name()='identificationInfo']/*[local-name()='MD_DataIdentification']/*[local-name()='citation']/*[local-name()='CI_Citation']/*[local-name()='identifier']/*[local-name()='MD_Identifier']/*[local-name()='code']/*[local-name()='CharacterString']");
         XPathExpression xpTitle = xpath.compile("*[local-name()='identificationInfo']/*[local-name()='MD_DataIdentification']/*[local-name()='citation']/*[local-name()='CI_Citation']/*[local-name()='title']/*[local-name()='CharacterString']");
         
         int startPosition = 1;
@@ -350,6 +351,7 @@ public class CheckActionBean implements ActionBean {
             for(int i = 0; i < numResults; i++) {
                 Node searchResultDocument = searchResults.getChildNodes().item(i);
 
+                String fileId = (String)xpFileID.evaluate(searchResultDocument, XPathConstants.STRING);
                 String id = (String)xpID.evaluate(searchResultDocument, XPathConstants.STRING);
                 String title = (String)xpTitle.evaluate(searchResultDocument, XPathConstants.STRING);
                 
@@ -358,6 +360,7 @@ public class CheckActionBean implements ActionBean {
                 
                 Element e = doc.createElement("output");
                 e.setAttribute("record", record++ + ""); 
+                e.setAttribute("file-id", fileId);
                 e.setAttribute("id", id);
                 e.setAttribute("title", title);
                 output.appendChild(e);

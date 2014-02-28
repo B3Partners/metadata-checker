@@ -87,7 +87,7 @@ hr {
 											<xsl:choose>
 												<xsl:when test="$document-link">
 													<a href="{concat($document-link,$output/@id)}" target="_blank">
-														<xsl:value-of select="$output/@id"/>
+														<xsl:value-of select="$output/@file-id"/>
 													</a>
 												</xsl:when>
 												<xsl:otherwise>
