@@ -92,7 +92,7 @@ public class CheckActionBean implements ActionBean {
     private String reportParams;
     
     @Validate
-    private List<String> selectedSchematrons = new ArrayList(Arrays.asList(new String[] {DEFAULT_SCH_OPTGROUP + "/schematron-rules-nl-v13.sch"}));
+    private List<String> selectedSchematrons = new ArrayList(Arrays.asList(new String[] {DEFAULT_SCH_OPTGROUP + "/dataset_schematron_rules_v13_2013.xml"}));
     
     @Validate
     private String selectedStylesheet = DEFAULT_XSL_OPTGROUP + "/rapport.xsl";
