@@ -7,6 +7,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Beheer Schematrons</title>
+        <%@include file="/WEB-INF/jsp/style.jsp"%>
     </head>
     <body>
         <h1>Beheer Schematrons</h1>

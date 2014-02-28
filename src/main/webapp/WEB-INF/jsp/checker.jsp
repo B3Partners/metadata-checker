@@ -6,6 +6,7 @@
 
     <head>
         <title>Metadata checker</title>
+        <%@include file="/WEB-INF/jsp/style.jsp"%>
     </head>
     <body>
 
@@ -73,8 +74,8 @@
                 <stripes:submit name="check" value="Check"/>
             </stripes:form>
                 
-                <pre>
+        <c:if test="${actionBean.outputType == 'schematron'}"><pre></c:if>
 ${actionBean.results}
-                </pre>                
+        <c:if test="${actionBean.outputType == 'schematron'}"></pre></c:if>
     </body>
 </html>
