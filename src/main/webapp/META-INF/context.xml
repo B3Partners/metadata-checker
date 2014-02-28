@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context path="/metadata-checker">
-    <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase"/>    
+  <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase"/>
 </Context>
