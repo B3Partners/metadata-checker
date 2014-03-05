@@ -29,12 +29,25 @@
                         CSW maxRecords per request: <stripes:text name="cswMaxRecords" size="10"/><br>
                         CSW totaal max: <stripes:text name="cswMaxRecordsTotal" size="10"/><p>
                         of<p>
-                    Bestand: <stripes:file name="document"/>
+                        Bestand: <stripes:file name="document"/>
                 </fieldset>
                 
+<script>
+    function useDefaultSchematronsClicked() {
+        var useDefault = document.getElementById("useDefaultSchematrons").checked;
+        
+        document.getElementById("selectedSchematrons").disabled = useDefault;
+    }
+    
+    window.onload = useDefaultSchematronsClicked;
+    
+</script>
+            
                 <fieldset>
                     <legend>Schematrons</legend>
-                    Selecteer meerdere schematrons door de Control knop in te houden bij het aanklikken:<br>
+                    <label><stripes:checkbox id="useDefaultSchematrons" name="useDefaultSchematrons" onclick="useDefaultSchematronsClicked();"/> Gebruik standaard Schematrons voor dataset/service en versie op basis van Schematron bestandsnamen</label>
+                    <p>
+                        Selecteer anders &eacute;&eacute;n of meerdere schematrons door de Control knop in te houden bij het aanklikken:<br>
                     <c:set var="size" value="${0}"/>
                     <c:forEach var="schGroup" items="${actionBean.schematrons}">
                         <c:set var="size" value="${size+1}"/>
@@ -42,7 +55,7 @@
                             <c:set var="size" value="${size+1}"/>
                         </c:forEach>
                     </c:forEach>
-                    <stripes:select name="selectedSchematrons" multiple="true" size="${size}">
+                    <stripes:select id="selectedSchematrons" name="selectedSchematrons" multiple="true" size="${size}">
                         <c:forEach var="schGroup" items="${actionBean.schematrons}">
                             <optgroup label="<c:out value="${schGroup.left}"/>">
                                 <c:forEach var="sch" items="${schGroup.right}">

@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -92,7 +93,10 @@ public class CheckActionBean implements ActionBean {
     private String reportParams;
     
     @Validate
-    private List<String> selectedSchematrons = new ArrayList(Arrays.asList(new String[] {DEFAULT_SCH_OPTGROUP + "/dataset_schematron_rules_v13_2013.xml"}));
+    private boolean useDefaultSchematrons = true;
+    
+    @Validate
+    private List<String> selectedSchematrons = new ArrayList();
     
     @Validate
     private String selectedStylesheet = DEFAULT_XSL_OPTGROUP + "/rapport.xsl";
@@ -211,17 +215,37 @@ public class CheckActionBean implements ActionBean {
     public void setCswMaxRecordsTotal(Integer cswMaxRecordsTotal) {
         this.cswMaxRecordsTotal = cswMaxRecordsTotal;
     }
+
+    public boolean isUseDefaultSchematrons() {
+        return useDefaultSchematrons;
+    }
+
+    public void setUseDefaultSchematrons(boolean useDefaultSchematrons) {
+        this.useDefaultSchematrons = useDefaultSchematrons;
+    }
     //</editor-fold>
+    
+    private String changePrettyDefaultToRealPath(String sch) {
+        if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
+            return getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
+        } else {
+            return sch;
+        }
+    }
     
     public static void loadSch(ActionBeanContext context, List<Pair<String,List<String>>> schematrons) {
         File f = new File(context.getServletContext().getRealPath(DEFAULT_SCH_DIR));
-        schematrons.add(Pair.of(DEFAULT_SCH_OPTGROUP, Arrays.asList(f.list())));
+        List<String> files = Arrays.asList(f.list());
+        Collections.sort(files);
+        schematrons.add(Pair.of(DEFAULT_SCH_OPTGROUP, files));
         
         String additionalDirs = context.getServletContext().getInitParameter("schematronDirs");
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    schematrons.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                    files = Arrays.asList(new File(dir).list());
+                    Collections.sort(files);
+                    schematrons.add(Pair.of(dir, files));
                 }
             } catch(Exception e) {
                 log.error("Exception loading Schematrons from directories " + additionalDirs, e);
@@ -230,10 +254,7 @@ public class CheckActionBean implements ActionBean {
     }    
     
     public String schTitle(String sch) {
-        if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
-            sch = getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
-        }        
-        return SchematronPatternTitleExtractor.getSchPatternTitle(sch);
+        return SchematronPatternTitleExtractor.getSchPatternTitle(changePrettyDefaultToRealPath(sch));
     }
     
     @Before(stages=LifecycleStage.BindingAndValidation)
@@ -245,15 +266,18 @@ public class CheckActionBean implements ActionBean {
     public void loadStylesheets() {
         reportParams = getContext().getServletContext().getInitParameter("defaultStylesheetParams");
         
-        
         File f = new File(getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR));
-        stylesheets.add(Pair.of(DEFAULT_XSL_OPTGROUP, Arrays.asList(f.list())));
+        List<String> files = Arrays.asList(f.list());
+        Collections.sort(files);
+        stylesheets.add(Pair.of(DEFAULT_XSL_OPTGROUP, files));
         
         String additionalDirs = getContext().getServletContext().getInitParameter("stylesheetDirs");
         if(additionalDirs != null) {
             try {
                 for(String dir: additionalDirs.split(";")) {
-                    stylesheets.add(Pair.of(dir, Arrays.asList(new File(dir).list())));
+                    files = Arrays.asList(new File(dir).list());
+                    Collections.sort(files);
+                    stylesheets.add(Pair.of(dir, files));
                 }
             } catch(Exception e) {
                 log.error("Exception loading stylesheets from directories " + additionalDirs, e);
@@ -266,7 +290,7 @@ public class CheckActionBean implements ActionBean {
         if(documentLocation == null && cswQuery == null && document == null) {
             getContext().getValidationErrors().addGlobalError(new SimpleError("Document is verplicht"));
         }
-        if(selectedSchematrons.isEmpty()) {
+        if(!useDefaultSchematrons && selectedSchematrons.isEmpty()) {
             getContext().getValidationErrors().addGlobalError(new SimpleError("Minimaal een schematron is verplicht"));
         }
     }
@@ -277,13 +301,49 @@ public class CheckActionBean implements ActionBean {
     }
     
     private void applySchematrons(Document doc, DocumentBuilder db, Element output, byte[] document) throws Exception {
-        for(String sch: selectedSchematrons) {
-            String orgSch = sch;
-            if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
-                sch = getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
-            }
+        
+        Document documentDom = db.parse(new ByteArrayInputStream(document));
 
-            Source source = new StreamSource(new ByteArrayInputStream(document));
+        boolean isServiceMetadata = MetadataUtil.isServiceMetadata(documentDom);
+        String metadataStandardName = MetadataUtil.getMetadataStandardName(documentDom);
+        
+        List<String> theSchematrons;
+        if(useDefaultSchematrons) {
+            theSchematrons = new ArrayList();
+            for(Pair<String, List<String>> dir: schematrons) {
+                String dirPart = dir.getLeft();
+                for(String filename: dir.getRight()) {
+                    if(metadataStandardName == null || metadataStandardName.length() < 3) {
+                        continue;
+                    }
+                    
+                    if(isServiceMetadata && filename.toLowerCase().indexOf("service") == -1) {
+                        continue;
+                    } else if(!isServiceMetadata && filename.toLowerCase().indexOf("dataset") == -1) {
+                        continue;
+                    }
+
+                    // Nederlands metadata profiel op ISO 19119 voor services 1.2 -> v12
+                    // Nederlands metadata profiel op ISO 19115 voor geografie 1.3 -> v13
+                    String versionPart = "v" + metadataStandardName.substring(metadataStandardName.length() - 3, metadataStandardName.length()).replaceAll("\\.", "");
+
+                    if(filename.indexOf(versionPart) == -1) {
+                        continue;
+                    }            
+                    System.out.println("Applying default schematron for standard name " + metadataStandardName + ": " + dirPart + "/" + filename);
+                    theSchematrons.add(dirPart + "/" + filename);
+                }
+            }
+        } else {
+            theSchematrons = selectedSchematrons;
+        }
+        
+        for(String sch: theSchematrons) {
+            
+            String orgSch = sch;
+            sch = changePrettyDefaultToRealPath(sch);
+
+            Source source = new DOMSource(documentDom);
 
             DOMResult r = new DOMResult();
             SchematronProcessor.schematron(source, sch, r);
@@ -443,5 +503,4 @@ public class CheckActionBean implements ActionBean {
             }
         }
     }
-    
 }
