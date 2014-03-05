@@ -330,7 +330,6 @@ public class CheckActionBean implements ActionBean {
                     if(filename.indexOf(versionPart) == -1) {
                         continue;
                     }            
-                    System.out.println("Applying default schematron for standard name " + metadataStandardName + ": " + dirPart + "/" + filename);
                     theSchematrons.add(dirPart + "/" + filename);
                 }
             }
@@ -391,7 +390,7 @@ public class CheckActionBean implements ActionBean {
             
             URL u = new URL(cswPath + URLEncodedUtils.format(pageParams, "UTF-8"));
             
-            System.out.println("CSW query: " + u);
+            log.debug("CSW query: " + u);
             
             byte[] cswResponseBytes = IOUtils.toByteArray(u.openStream());
             Document cswResponse = db.parse(new ByteArrayInputStream(cswResponseBytes));
@@ -406,7 +405,7 @@ public class CheckActionBean implements ActionBean {
                 break;
             }
             
-            System.out.println("resultaten: " + numResults);
+            log.debug("Number of results: " + numResults);
             total += numResults;
             for(int i = 0; i < numResults; i++) {
                 Node searchResultDocument = searchResults.getChildNodes().item(i);
@@ -415,7 +414,6 @@ public class CheckActionBean implements ActionBean {
                 String id = (String)xpID.evaluate(searchResultDocument, XPathConstants.STRING);
                 String title = (String)xpTitle.evaluate(searchResultDocument, XPathConstants.STRING);
                 
-                //System.out.println("Document: " + SchematronProcessor.xmlToString(searchResultDocument));
                 byte[] documentBytes = SchematronProcessor.xmlToBytes(searchResultDocument);
                 
                 Element e = doc.createElement("output");

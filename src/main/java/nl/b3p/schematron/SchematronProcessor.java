@@ -125,15 +125,4 @@ public class SchematronProcessor {
         t.transform(new DOMSource(n), new StreamResult(bos));
         return bos.toByteArray();
     }    
-
-    public static void main(String[] args) throws Exception {
-        
-        DOMResult r = new DOMResult();
-
-        schematron(new StreamSource("/home/matthijsln/dev/pgr/validatie/voorbeeldbestanden/fietsroutenetwerk_l.xml"), 
-                "/home/matthijsln/dev/pgr/validatie/schematron-rules-nl-v13.sch",
-                r);
-        
-        System.out.println(xmlToString(r.getNode()));
-    }
 }
