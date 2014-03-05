@@ -395,7 +395,7 @@
 		         or (normalize-space(current())='Energiebronnen')
 		         or (normalize-space(current())='Faciliteiten voor landbouw en aquacultuur')
 		         or (normalize-space(current())='Faciliteiten voor productie en industrie')
-		         or (normalize-space(current())='Gebieden met natuurrisico s')
+		         or (normalize-space(current())='Gebieden met natuurrisico''s')
 		         or (normalize-space(current())='Gebiedsbeheer, gebieden waar beperkingen gelden, gereguleerde gebieden en rapportage-eenheden')
 		         or (normalize-space(current())='Gebouwen')
 		         or (normalize-space(current())='Geografisch rastersysteem')
