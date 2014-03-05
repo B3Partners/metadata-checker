@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
+    <!-- Begin configuratieinstellingen -->
+
     <!-- Extra directories om te zoeken naar Schematrons (.sch), gescheiden door ; -->
     <context-param>
         <param-name>schematronDirs</param-name>
@@ -13,8 +15,14 @@
     </context-param>    
     <context-param>
         <param-name>defaultStylesheetParams</param-name>
-        <param-value>document-link=http://some-csw/something?id=</param-value>
+        <!--param-value>document-link=http://some-csw/something?id=</param-value-->
+        <param-value>document-link=http://test.b3p.nl/georegister/ShowMetadataServlet?uuid=</param-value>
+        <!--param-value>document-link=http://acc.provinciaalgeoregister.nl/georegister/ShowMetadataServlet?uuid=</param-value-->
+        <!--param-value>document-link=http://www.provinciaalgeoregister.nl/georegister/ShowMetadataServlet?uuid=</param-value-->
     </context-param>
+    
+    <!-- Einde configuratieinstellingen -->
+    
     <!-- Localization context voor o.a. de <fmt:message> JSTL tag -->
     <context-param>
         <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
