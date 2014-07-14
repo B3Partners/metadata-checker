@@ -52,52 +52,52 @@ import org.w3c.dom.NodeList;
 @UrlBinding("/action/check")
 public class CheckActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(CheckActionBean.class);
-    
+
     private static final String NAMESPACE_CSW = "http://www.opengis.net/cat/csw/2.0.2";
-    
+
     public static final String DEFAULT_SCH_OPTGROUP = "Validaties NL metadata profiel";
     public static final String DEFAULT_SCH_DIR = "/WEB-INF/sch";
     public static final String DEFAULT_XSL_OPTGROUP = "Standaardrapportages";
     public static final String DEFAULT_XSL_DIR = "/WEB-INF/xsl";
-    
+
     private ActionBeanContext context;
-    
+
     @Validate
     private String documentLocation;
-    
+
     @Validate
     private String cswQuery;
-    
+
     @Validate
     private int cswMaxRecords = 10;
-    
+
     @Validate
     private Integer cswMaxRecordsTotal;
-    
+
     @Validate
     private FileBean document;
-    
+
     private String results;
-    
+
     private List<Pair<String,List<String>>> schematrons = new ArrayList();
-    
+
     private List<Pair<String,List<String>>> stylesheets = new ArrayList();
-    
+
     @Validate
     private String disposition = "inline";
-    
+
     @Validate
     private String outputType = "report";
-    
+
     @Validate
     private String reportParams;
-    
+
     @Validate
     private boolean useDefaultSchematrons = true;
-    
+
     @Validate
     private List<String> selectedSchematrons = new ArrayList();
-    
+
     @Validate
     private String selectedStylesheet = DEFAULT_XSL_OPTGROUP + "/rapport.xsl";
 
@@ -106,7 +106,7 @@ public class CheckActionBean implements ActionBean {
     public ActionBeanContext getContext() {
         return context;
     }
-    
+
     @Override
     public void setContext(ActionBeanContext context) {
         this.context = context;
@@ -119,7 +119,7 @@ public class CheckActionBean implements ActionBean {
     public void setReportParams(String reportParams) {
         this.reportParams = reportParams;
     }
-    
+
     public String getOutputType() {
         return outputType;
     }
@@ -127,59 +127,59 @@ public class CheckActionBean implements ActionBean {
     public void setOutputType(String outputType) {
         this.outputType = outputType;
     }
-    
+
     public String getDocumentLocation() {
         return documentLocation;
     }
-    
+
     public void setDocumentLocation(String documentLocation) {
         this.documentLocation = documentLocation;
     }
-    
+
     public String getResults() {
         return results;
     }
-    
+
     public void setResults(String results) {
         this.results = results;
     }
-    
+
     public FileBean getDocument() {
         return document;
     }
-    
+
     public void setDocument(FileBean document) {
         this.document = document;
     }
-    
+
     public String getDisposition() {
         return disposition;
     }
-    
+
     public void setDisposition(String disposition) {
         this.disposition = disposition;
     }
-    
+
     public List<Pair<String, List<String>>> getSchematrons() {
         return schematrons;
     }
-    
+
     public void setSchematrons(List<Pair<String, List<String>>> schematrons) {
         this.schematrons = schematrons;
     }
-    
+
     public List<Pair<String, List<String>>> getStylesheets() {
         return stylesheets;
     }
-    
+
     public void setStylesheets(List<Pair<String, List<String>>> stylesheets) {
         this.stylesheets = stylesheets;
     }
-    
+
     public List<String> getSelectedSchematrons() {
         return selectedSchematrons;
     }
-    
+
     public void setSelectedSchematrons(List<String> selectedSchematrons) {
         this.selectedSchematrons = selectedSchematrons;
     }
@@ -191,27 +191,27 @@ public class CheckActionBean implements ActionBean {
     public void setSelectedStylesheet(String selectedStylesheet) {
         this.selectedStylesheet = selectedStylesheet;
     }
-    
+
     public String getCswQuery() {
         return cswQuery;
     }
-    
+
     public void setCswQuery(String cswQuery) {
         this.cswQuery = cswQuery;
     }
-    
+
     public int getCswMaxRecords() {
         return cswMaxRecords;
     }
-    
+
     public void setCswMaxRecords(int cswMaxRecords) {
         this.cswMaxRecords = cswMaxRecords;
     }
-    
+
     public Integer getCswMaxRecordsTotal() {
         return cswMaxRecordsTotal;
     }
-    
+
     public void setCswMaxRecordsTotal(Integer cswMaxRecordsTotal) {
         this.cswMaxRecordsTotal = cswMaxRecordsTotal;
     }
@@ -224,7 +224,7 @@ public class CheckActionBean implements ActionBean {
         this.useDefaultSchematrons = useDefaultSchematrons;
     }
     //</editor-fold>
-    
+
     private String changePrettyDefaultToRealPath(String sch) {
         if(sch.startsWith(DEFAULT_SCH_OPTGROUP)) {
             return getContext().getServletContext().getRealPath(DEFAULT_SCH_DIR + sch.substring(DEFAULT_SCH_OPTGROUP.length()));
@@ -232,13 +232,13 @@ public class CheckActionBean implements ActionBean {
             return sch;
         }
     }
-    
+
     public static void loadSch(ActionBeanContext context, List<Pair<String,List<String>>> schematrons) {
         File f = new File(context.getServletContext().getRealPath(DEFAULT_SCH_DIR));
         List<String> files = Arrays.asList(f.list());
         Collections.sort(files);
         schematrons.add(Pair.of(DEFAULT_SCH_OPTGROUP, files));
-        
+
         String additionalDirs = context.getServletContext().getInitParameter("schematronDirs");
         if(additionalDirs != null) {
             try {
@@ -251,26 +251,26 @@ public class CheckActionBean implements ActionBean {
                 log.error("Exception loading Schematrons from directories " + additionalDirs, e);
             }
         }
-    }    
-    
+    }
+
     public String schTitle(String sch) {
         return SchematronPatternTitleExtractor.getSchPatternTitle(changePrettyDefaultToRealPath(sch));
     }
-    
+
     @Before(stages=LifecycleStage.BindingAndValidation)
     public void loadSch() {
         loadSch(getContext(), schematrons);
     }
-    
+
     @Before(stages=LifecycleStage.BindingAndValidation)
     public void loadStylesheets() {
         reportParams = getContext().getServletContext().getInitParameter("defaultStylesheetParams");
-        
+
         File f = new File(getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR));
         List<String> files = Arrays.asList(f.list());
         Collections.sort(files);
         stylesheets.add(Pair.of(DEFAULT_XSL_OPTGROUP, files));
-        
+
         String additionalDirs = getContext().getServletContext().getInitParameter("stylesheetDirs");
         if(additionalDirs != null) {
             try {
@@ -284,7 +284,7 @@ public class CheckActionBean implements ActionBean {
             }
         }
     }
-    
+
     @ValidationMethod(on = "check")
     public void checkInput() {
         if(documentLocation == null && cswQuery == null && document == null) {
@@ -294,19 +294,24 @@ public class CheckActionBean implements ActionBean {
             getContext().getValidationErrors().addGlobalError(new SimpleError("Minimaal een schematron is verplicht"));
         }
     }
-    
+
     @DefaultHandler
     public Resolution form() {
         return new ForwardResolution("/WEB-INF/jsp/checker.jsp");
     }
-    
+
     private void applySchematrons(Document doc, DocumentBuilder db, Element output, byte[] document) throws Exception {
-        
+
         Document documentDom = db.parse(new ByteArrayInputStream(document));
 
         boolean isServiceMetadata = MetadataUtil.isServiceMetadata(documentDom);
         String metadataStandardName = MetadataUtil.getMetadataStandardName(documentDom);
-        
+
+        // Nederlands metadata profiel op ISO 19119 voor services 1.2 -> v12
+        // Nederlands metadata profiel op ISO 19115 voor geografie 1.3 -> v13
+        // Nederlands metadata profiel op ISO 19115 voor geografie 1.3.1 -> v131
+        String versionPart = "v" + metadataStandardName.substring(metadataStandardName.lastIndexOf(" ")+1).replaceAll("\\.", "");
+
         List<String> theSchematrons;
         if(useDefaultSchematrons) {
             theSchematrons = new ArrayList();
@@ -316,29 +321,26 @@ public class CheckActionBean implements ActionBean {
                     if(metadataStandardName == null || metadataStandardName.length() < 3) {
                         continue;
                     }
-                    
+
                     if(isServiceMetadata && filename.toLowerCase().indexOf("service") == -1) {
                         continue;
                     } else if(!isServiceMetadata && filename.toLowerCase().indexOf("dataset") == -1) {
                         continue;
                     }
 
-                    // Nederlands metadata profiel op ISO 19119 voor services 1.2 -> v12
-                    // Nederlands metadata profiel op ISO 19115 voor geografie 1.3 -> v13
-                    String versionPart = "v" + metadataStandardName.substring(metadataStandardName.length() - 3, metadataStandardName.length()).replaceAll("\\.", "");
 
                     if(filename.indexOf(versionPart) == -1) {
                         continue;
-                    }            
+                    }
                     theSchematrons.add(dirPart + "/" + filename);
                 }
             }
         } else {
             theSchematrons = selectedSchematrons;
         }
-        
+
         for(String sch: theSchematrons) {
-            
+
             String orgSch = sch;
             sch = changePrettyDefaultToRealPath(sch);
 
@@ -348,38 +350,38 @@ public class CheckActionBean implements ActionBean {
             SchematronProcessor.schematron(source, sch, r);
 
             // Workaround using XML serialization to bytes is required to avoid
-            // org.w3c.dom.DOMException: NOT_SUPPORTED_ERR: The implementation does not support the requested type of object or operation. 
+            // org.w3c.dom.DOMException: NOT_SUPPORTED_ERR: The implementation does not support the requested type of object or operation.
 	        // at org.apache.xerces.dom.CoreDocumentImpl.adoptNode
             byte[] xml = SchematronProcessor.xmlToBytes(r.getNode());
             Document rDom = db.parse(new ByteArrayInputStream(xml));
-            
+
             Element schematronOutput = (Element)doc.adoptNode(rDom.getDocumentElement());
             schematronOutput.setAttribute("schematron", orgSch);
             output.appendChild(schematronOutput);
         }
     }
-    
+
     private void handleCswQuery(Document doc, DocumentBuilder db, Element output) throws Exception {
-        
+
         String cswPath = cswQuery.substring(0, cswQuery.indexOf("?")+1);
-        
+
         // Parse CSW query string, remove maxRecords and startPosition
-        
+
         List<NameValuePair> orgParams = URLEncodedUtils.parse(new URI(cswQuery), "UTF-8");
         List<NameValuePair> params = new ArrayList();
-        
+
         for(NameValuePair p: orgParams) {
             if(!p.getName().toLowerCase().equals("maxrecords") && !p.getName().toLowerCase().equals("startposition")) {
                 params.add(p);
             }
         }
-        
+
         XPathFactory xpf = XPathFactory.newInstance();
         XPath xpath = xpf.newXPath();
         XPathExpression xpFileID = xpath.compile("*[local-name()='fileIdentifier']/*[local-name()='CharacterString']");
         XPathExpression xpID = xpath.compile("*[local-name()='identificationInfo']/*[local-name()='MD_DataIdentification']/*[local-name()='citation']/*[local-name()='CI_Citation']/*[local-name()='identifier']/*[local-name()='MD_Identifier']/*[local-name()='code']/*[local-name()='CharacterString']");
         XPathExpression xpTitle = xpath.compile("*[local-name()='identificationInfo']/*[local-name()='MD_DataIdentification']/*[local-name()='citation']/*[local-name()='CI_Citation']/*[local-name()='title']/*[local-name()='CharacterString']");
-        
+
         int startPosition = 1;
         int record = 1;
         int total = 0;
@@ -387,24 +389,24 @@ public class CheckActionBean implements ActionBean {
             List<NameValuePair> pageParams = new ArrayList(params);
             pageParams.add(new BasicNameValuePair("maxRecords", cswMaxRecords + ""));
             pageParams.add(new BasicNameValuePair("startPosition", startPosition + ""));
-            
+
             URL u = new URL(cswPath + URLEncodedUtils.format(pageParams, "UTF-8"));
-            
+
             log.debug("CSW query: " + u);
-            
+
             byte[] cswResponseBytes = IOUtils.toByteArray(u.openStream());
             Document cswResponse = db.parse(new ByteArrayInputStream(cswResponseBytes));
-            
+
             NodeList nl = cswResponse.getElementsByTagNameNS(NAMESPACE_CSW, "SearchResults");
             Node searchResults = nl.item(0);
-            
+
             startPosition = Integer.parseInt(searchResults.getAttributes().getNamedItem("nextRecord").getNodeValue());
-          
+
             int numResults = searchResults.getChildNodes().getLength();
             if(numResults == 0) {
                 break;
             }
-            
+
             log.debug("Number of results: " + numResults);
             total += numResults;
             for(int i = 0; i < numResults; i++) {
@@ -413,27 +415,27 @@ public class CheckActionBean implements ActionBean {
                 String fileId = (String)xpFileID.evaluate(searchResultDocument, XPathConstants.STRING);
                 String id = (String)xpID.evaluate(searchResultDocument, XPathConstants.STRING);
                 String title = (String)xpTitle.evaluate(searchResultDocument, XPathConstants.STRING);
-                
+
                 byte[] documentBytes = SchematronProcessor.xmlToBytes(searchResultDocument);
-                
+
                 Element e = doc.createElement("output");
-                e.setAttribute("record", record++ + ""); 
+                e.setAttribute("record", record++ + "");
                 e.setAttribute("file-id", fileId);
                 e.setAttribute("id", id);
                 e.setAttribute("title", title);
                 output.appendChild(e);
-                applySchematrons(doc, db, e, documentBytes);                
-            }            
+                applySchematrons(doc, db, e, documentBytes);
+            }
         } while(cswMaxRecordsTotal == null || total < cswMaxRecordsTotal);
     }
-    
+
     public Resolution check() throws Exception {
-    
+
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.newDocument();
-        
+
         Element root = doc.createElement("checked");
 
         try {
@@ -462,7 +464,7 @@ public class CheckActionBean implements ActionBean {
                 document.delete();
             }
         }
-        
+
         if("schematron".equals(outputType) || selectedStylesheet == null) {
             if("inline".equals(disposition)) {
                 results += StringEscapeUtils.escapeHtml4(SchematronProcessor.xmlToString(root));
@@ -474,11 +476,11 @@ public class CheckActionBean implements ActionBean {
             if(selectedStylesheet.startsWith(DEFAULT_XSL_OPTGROUP)) {
                 selectedStylesheet = getContext().getServletContext().getRealPath(DEFAULT_XSL_DIR + selectedStylesheet.substring(DEFAULT_XSL_OPTGROUP.length()));
             }
-            
+
             TransformerFactory f = TransformerFactory.newInstance();
             Transformer t = f.newTransformer(new StreamSource(selectedStylesheet));
             t.setOutputProperty(OutputKeys.INDENT, "yes");
-            
+
             if(reportParams != null) {
                 String[] params = reportParams.trim().split("\n");
                 for(String p: params) {
@@ -488,10 +490,10 @@ public class CheckActionBean implements ActionBean {
                     }
                 }
             }
-            
+
             if("inline".equals(disposition)) {
                 StringWriter sw = new StringWriter();
-                t.transform(new DOMSource(root), new StreamResult(sw));            
+                t.transform(new DOMSource(root), new StreamResult(sw));
                 results += sw.toString();
                 return new ForwardResolution("/WEB-INF/jsp/checker.jsp");
             } else {
