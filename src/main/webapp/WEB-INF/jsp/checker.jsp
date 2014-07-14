@@ -104,5 +104,6 @@
         <c:if test="${actionBean.outputType == 'schematron'}"><pre></c:if>
 ${actionBean.results}
         <c:if test="${actionBean.outputType == 'schematron'}"></pre></c:if>
+        <p style="padding-bottom: 20px"/>
     </body>
 </html>
