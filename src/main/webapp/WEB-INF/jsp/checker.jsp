@@ -60,7 +60,7 @@
                             <optgroup label="<c:out value="${schGroup.left}"/>">
                                 <c:forEach var="sch" items="${schGroup.right}">
                                     <c:set var="fullSchPath" value="${schGroup.left}/${sch}"/>
-                                    <c:set var="schTitle" value="${actionBean.schTitle(fullSchPath)}"/>
+                                    <c:set var="schTitle"><%= ((nl.b3p.metadatachecker.stripes.CheckActionBean)pageContext.getRequest().getAttribute("actionBean")).schTitle((String)pageContext.getAttribute("fullSchPath")) %></c:set>
                                     <stripes:option value="${fullSchPath}"><c:out value="${sch}"/> <c:if test="${!empty schTitle}">(<c:out value="${schTitle}"/>)</c:if></stripes:option>
                                 </c:forEach>
                             </optgroup>
